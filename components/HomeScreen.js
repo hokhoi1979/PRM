@@ -27,6 +27,7 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const flatListRef = useRef(null);
   const [select, setSelect] = useState(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const screenWidth = Dimensions.get("window").width;
   const itemWidth = (screenWidth - 3 * 10) / 2;
@@ -136,238 +137,250 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    if (text.toLowerCase() === "all") {
-      setFilter(player);
-    } else {
-      const loc = player.filter((item) => item.team === text);
-      setFilter(loc);
+    let filtered = [...player];
+
+    if (text.toLowerCase() !== "all") {
+      filtered = filtered.filter((item) => item.team === text);
     }
 
+    if (search.trim() !== "") {
+      filtered = filtered.filter((item) =>
+        item.playerName.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    setFilter(filtered);
     flatListRef.current?.scrollToOffset({ animated: true, offset: 0 });
-  }, [text]);
+  }, [text, search]);
 
   const handleSearch = () => {
-    const searchPlayer = player.filter((item) =>
-      item.playerName.toLowerCase().includes(search.toLowerCase())
-    );
-    setFilter(searchPlayer);
-    setSearch("");
+    setShowSuggestions(false);
     flatListRef.current?.scrollToOffset({ animated: true, offset: 0 });
   };
 
   return (
-    <FlatList
-      ref={flatListRef}
-      data={filter}
-      keyExtractor={(item) => item.id.toString()}
-      numColumns={2}
-      ListHeaderComponent={
-        <>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ maxHeight: 60 }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                justifyContent: "center",
-                gap: 15,
-                padding: 15,
-                maxHeight: 60,
-              }}
-            >
-              <Pressable onPress={() => setText("All")}>
-                <Text style={getButtonStyle("All")}>All</Text>
-              </Pressable>
-              {[...new Set(player.map((item) => item.team))].map((team) => (
-                <Pressable key={team} onPress={() => setText(team)}>
-                  <Text style={getButtonStyle(team)}>{team}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </ScrollView>
-
-          <View
-            style={{
-              paddingHorizontal: 10,
-              marginBottom: 10,
-              marginTop: 10,
-              flexDirection: "row",
-              gap: 4,
-            }}
-          >
-            <TextInput
-              placeholder="Search player..."
-              style={{
-                borderWidth: 1,
-                borderColor: "#ccc",
-                borderRadius: 8,
-                padding: 10,
-                backgroundColor: "#fff",
-                width: "80%",
-              }}
-              onChangeText={(text) => setSearch(text)}
-              value={search}
-            />
-            <Pressable
-              style={{ justifyContent: "center" }}
-              onPress={handleSearch}
-            >
-              <Text
-                style={{
-                  paddingVertical: 10,
-                  paddingHorizontal: 15,
-                  backgroundColor: "black",
-                  color: "white",
-                  borderRadius: 7,
-                  fontWeight: "600",
-                }}
-              >
-                Search
-              </Text>
+    <View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ maxHeight: 60 }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: 15,
+            padding: 15,
+            maxHeight: 60,
+          }}
+        >
+          <Pressable onPress={() => setText("All")}>
+            <Text style={getButtonStyle("All")}>All</Text>
+          </Pressable>
+          {[...new Set(player.map((item) => item.team))].map((team) => (
+            <Pressable key={team} onPress={() => setText(team)}>
+              <Text style={getButtonStyle(team)}>{team}</Text>
             </Pressable>
-          </View>
-        </>
-      }
-      columnWrapperStyle={{
-        justifyContent: "space-between",
-        paddingHorizontal: 10,
-        paddingTop: 20,
-      }}
-      renderItem={({ item }) => (
-        <Pressable>
-          <View
-            style={{
-              width: itemWidth,
-              height: 290,
-              flex: 1,
-              backgroundColor: "white",
-              borderRadius: 15,
-              padding: 10,
-              marginBottom: 10,
-              justifyContent: "space-between",
-            }}
-          >
-            <View style={{ position: "relative" }}>
-              <Pressable onPress={() => setSelect(item)}>
-                <Image
-                  source={{ uri: item.image }}
-                  style={{
-                    width: "100%",
-                    height: 150,
-                    borderRadius: 5,
-                    resizeMode: "cover",
-                  }}
-                />
-              </Pressable>
-              <Pressable
-                onPress={async () => await handleLike(item)}
-                style={{ position: "absolute", right: 5, top: 5 }}
+          ))}
+        </View>
+      </ScrollView>
+      <FlatList
+        ref={flatListRef}
+        data={filter}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2}
+        contentContainerStyle={{
+          paddingBottom: 80, // hoặc 100 nếu Bottom Tab dày
+        }}
+        ListHeaderComponent={
+          <>
+            <View
+              style={{ paddingHorizontal: 10, marginBottom: 10, marginTop: 10 }}
+            >
+              <View
+                style={{ flexDirection: "row", gap: 4, alignItems: "center" }}
               >
-                <HeartIcon isLiked={likedItems.includes(item.id)} />
-              </Pressable>
-            </View>
-            {select && (
-              <Modal visible={true} transparent animationType="fade">
                 <View
                   style={{
-                    flex: 1,
-                    backgroundColor: "rgba(0,0,0,0.7)",
-                    justifyContent: "center",
-                    alignItems: "center",
+                    position: "relative",
+                    width: "80%",
                   }}
                 >
-                  <Pressable
-                    onPress={() => setSelect(null)}
-                    style={{ flex: 1, width: "100%", height: "100%" }}
-                  >
-                    <View
+                  <TextInput
+                    placeholder="Search player..."
+                    style={{
+                      borderWidth: 1,
+                      borderColor: "#ccc",
+                      borderRadius: 8,
+                      padding: 10,
+                      backgroundColor: "#fff",
+                      width: "100%",
+                      paddingRight: 30,
+                    }}
+                    onChangeText={(text) => {
+                      setSearch(text);
+                      setShowSuggestions(true);
+                    }}
+                    value={search}
+                  />
+
+                  {search.length > 0 && (
+                    <Pressable
+                      onPress={() => {
+                        setSearch("");
+                        setShowSuggestions(false);
+                      }}
                       style={{
-                        flex: 1,
-                        justifyContent: "center",
-                        alignItems: "center",
+                        position: "absolute",
+                        right: 8,
+                        top: "30%",
                       }}
                     >
-                      <Image
-                        style={{
-                          width: 320,
-                          height: 320,
-                          padding: 2,
-                          backgroundColor: "white",
-                          borderRadius: 20,
-                        }}
-                        source={{ uri: select.image }}
-                      />
-                    </View>
-                  </Pressable>
-                </View>
-              </Modal>
-            )}
-
-            <View style={{ marginTop: 5 }}>
-              <View style={{ flexDirection: "row" }}>
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  <Entypo name="users" size={12} color="black" />
-                  <Text style={{ fontWeight: "600" }}>Player: </Text>
-                </View>
-
-                <Text>{item.playerName}</Text>
-              </View>
-              <View style={{ flexDirection: "row" }}>
-                <View style={{ flexDirection: "row", gap: 4 }}>
-                  <Entypo
-                    name="back-in-time"
-                    size={16}
-                    color="black"
-                    style={{ position: "relative", right: 2 }}
-                  />
-                  <Text style={{ fontWeight: "600" }}>Time: </Text>
-                </View>
-                <Text>
-                  {Math.floor(item.MinutesPlayed / 60)}h{" "}
-                  {item.MinutesPlayed % 60}m
-                </Text>
-              </View>
-              <View style={{ flexDirection: "row", gap: 2 }}>
-                <View>
-                  {item?.isCaptain && (
-                    <>
-                      {" "}
-                      <View
-                        style={{ flexDirection: "row", gap: 5, marginTop: 2 }}
-                      >
-                        <FontAwesome5
-                          name="copyright"
-                          size={15}
-                          color="black"
-                        />
-                        <Text style={{ fontWeight: "600" }}>Captain</Text>{" "}
-                      </View>
-                    </>
+                      <AntDesign name="closecircleo" size={18} color="#ccc" />
+                    </Pressable>
                   )}
                 </View>
-              </View>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginTop: 3,
-                }}
-              >
-                <View style={{ flexDirection: "row", gap: 5 }}>
-                  <AntDesign name="staro" size={15} color="black" />
-                  <Text style={{ fontWeight: "600", marginRight: 4 }}>
-                    Rating:
+
+                <Pressable
+                  style={{ justifyContent: "center" }}
+                  onPress={handleSearch}
+                >
+                  <Text
+                    style={{
+                      paddingVertical: 10,
+                      paddingHorizontal: 15,
+                      backgroundColor: "black",
+                      color: "white",
+                      borderRadius: 7,
+                      fontWeight: "600",
+                    }}
+                  >
+                    Search
                   </Text>
-                </View>
-                {item.feedbacks?.[0]?.rating ? (
-                  <StarRating rating={item.feedbacks[0].rating} />
-                ) : (
-                  <Text>No rating</Text>
-                )}
+                </Pressable>
               </View>
+
+              {search.length > 0 && showSuggestions && (
+                <View
+                  style={{
+                    backgroundColor: "#fff",
+                    borderWidth: 1,
+                    borderColor: "#ccc",
+                    borderRadius: 8,
+                    marginTop: 5,
+                    maxHeight: 150,
+                  }}
+                >
+                  <ScrollView>
+                    {player
+                      .filter((item) =>
+                        item.playerName
+                          .toLowerCase()
+                          .includes(search.toLowerCase())
+                      )
+                      .slice(0, 5)
+                      .map((item) => (
+                        <Pressable
+                          key={item.id}
+                          onPress={() => {
+                            setSearch(item.playerName);
+                            setFilter([item]);
+                            setShowSuggestions(false); // <- ẩn gợi ý sau khi chọn
+                            flatListRef.current?.scrollToOffset({
+                              animated: true,
+                              offset: 0,
+                            });
+                          }}
+                          style={{
+                            padding: 10,
+                            borderBottomWidth: 1,
+                            borderBottomColor: "#eee",
+                          }}
+                        >
+                          <Text>{item.playerName}</Text>
+                        </Pressable>
+                      ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+          </>
+        }
+        columnWrapperStyle={{
+          justifyContent: "space-between",
+          paddingHorizontal: 10,
+          paddingTop: 20,
+        }}
+        renderItem={({ item }) => (
+          <Pressable>
+            <View
+              style={{
+                width: itemWidth,
+                height: 290,
+                flex: 1,
+                backgroundColor: "white",
+                borderRadius: 15,
+                padding: 10,
+                marginBottom: 10,
+                justifyContent: "space-between",
+              }}
+            >
+              <View style={{ position: "relative" }}>
+                <Pressable onPress={() => setSelect(item)}>
+                  <Image
+                    source={{ uri: item.image }}
+                    style={{
+                      width: "100%",
+                      height: 150,
+                      borderRadius: 5,
+                      resizeMode: "cover",
+                    }}
+                  />
+                </Pressable>
+                <Pressable
+                  onPress={async () => await handleLike(item)}
+                  style={{ position: "absolute", right: 5, top: 5 }}
+                >
+                  <HeartIcon isLiked={likedItems.includes(item.id)} />
+                </Pressable>
+              </View>
+              {select && (
+                <Modal visible={true} transparent animationType="fade">
+                  <View
+                    style={{
+                      flex: 1,
+                      backgroundColor: "rgba(0,0,0,0.7)",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Pressable
+                      onPress={() => setSelect(null)}
+                      style={{ flex: 1, width: "100%", height: "100%" }}
+                    >
+                      <View
+                        style={{
+                          flex: 1,
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Image
+                          style={{
+                            width: 320,
+                            height: 320,
+                            padding: 2,
+                            backgroundColor: "white",
+                            borderRadius: 20,
+                          }}
+                          source={{ uri: select.image }}
+                        />
+                      </View>
+                    </Pressable>
+                  </View>
+                </Modal>
+              )}
 
               <Pressable
                 onPress={() =>
@@ -385,22 +398,67 @@ export default function HomeScreen() {
                     date: item.feedbacks?.[0]?.date ?? "",
                     rating: item.feedbacks?.[0]?.rating ?? "",
                     feedbacks: item.feedbacks,
-                    // onToggleLike: () => toggleLike(item.id),
-                    // updateLikeState: (liked) => {
-                    //   setLikedItems((prev) =>
-                    //     liked
-                    //       ? [...prev, item.id]
-                    //       : prev.filter((id) => id !== item.id)
-                    //   );
-                    // },
                   })
                 }
               >
-                {({ pressed }) => (
+                <View style={{ marginTop: 5 }}>
+                  <View style={{ flexDirection: "row" }}>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <Entypo name="users" size={12} color="black" />
+                      <Text style={{ fontWeight: "600" }}>Player: </Text>
+                    </View>
+                    <Text>{item.playerName}</Text>
+                  </View>
+
+                  <View style={{ flexDirection: "row" }}>
+                    <View style={{ flexDirection: "row", gap: 4 }}>
+                      <Entypo
+                        name="back-in-time"
+                        size={16}
+                        color="black"
+                        style={{ position: "relative", right: 2 }}
+                      />
+                      <Text style={{ fontWeight: "600" }}>Time: </Text>
+                    </View>
+                    <Text>
+                      {Math.floor(item.MinutesPlayed / 60)}h{" "}
+                      {item.MinutesPlayed % 60}m
+                    </Text>
+                  </View>
+
+                  {item?.isCaptain && (
+                    <View
+                      style={{ flexDirection: "row", gap: 5, marginTop: 2 }}
+                    >
+                      <FontAwesome5 name="copyright" size={15} color="black" />
+                      <Text style={{ fontWeight: "600" }}>Captain</Text>
+                    </View>
+                  )}
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginTop: 3,
+                    }}
+                  >
+                    <View style={{ flexDirection: "row", gap: 5 }}>
+                      <AntDesign name="staro" size={15} color="black" />
+                      <Text style={{ fontWeight: "600", marginRight: 4 }}>
+                        Rating:
+                      </Text>
+                    </View>
+                    {item.feedbacks?.[0]?.rating ? (
+                      <StarRating rating={item.feedbacks[0].rating} />
+                    ) : (
+                      <Text>No rating</Text>
+                    )}
+                  </View>
+
                   <View
                     style={{
                       margin: "auto",
-                      backgroundColor: pressed ? "#555" : "gray",
+                      backgroundColor: "gray",
                       width: "100%",
                       marginTop: 10,
                       borderRadius: 5,
@@ -423,12 +481,12 @@ export default function HomeScreen() {
                     </Text>
                     <AntDesign name="rightcircleo" size={16} color="white" />
                   </View>
-                )}
+                </View>
               </Pressable>
             </View>
-          </View>
-        </Pressable>
-      )}
-    />
+          </Pressable>
+        )}
+      />
+    </View>
   );
 }

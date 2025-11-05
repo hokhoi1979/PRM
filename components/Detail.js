@@ -166,7 +166,7 @@ export default function Detail({ route }) {
               borderRadius: 15,
               position: "relative",
             }}
-          />{" "}
+          />
           <Pressable
             style={{ position: "absolute", left: 10, top: 30 }}
             onPress={() => navigation.goBack()}
@@ -195,10 +195,10 @@ export default function Detail({ route }) {
             <HeartIcon isLiked={liked} />
           </Pressable>
         </View>
-      </View>{" "}
+      </View>
       <View style={{ padding: 10 }}>
         <View style={{ flexDirection: "row", gap: 4 }}>
-          <FontAwesome5 name="trophy" size={18} color="#c5b123" />{" "}
+          <FontAwesome5 name="trophy" size={18} color="#c5b123" />
           <Text style={{ fontWeight: 600, marginBottom: 10 }}>
             Information of Perfume
           </Text>
@@ -413,7 +413,6 @@ export default function Detail({ route }) {
           {/* <ScrollView> */}
           {filteredFeedbacks?.map((fb) => (
             <View>
-              {" "}
               <View
                 style={{
                   padding: 10,
@@ -423,7 +422,6 @@ export default function Detail({ route }) {
               >
                 <View>
                   <View style={{ flexDirection: "row" }}>
-                    {" "}
                     <AntDesign name="user" size={15} color="black" />
                     <Text>{fb.author}</Text>
                   </View>

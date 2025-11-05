@@ -141,8 +141,11 @@ function FavouriteStackScreen() {
 export default function App() {
   return (
     <NavigationContainer>
-      <Tab.Navigator>
+      <Tab.Navigator
+      // screenOptions={{ tabBarStyle: { height: 80, marginTop: 20 } }}
+      >
         <Tab.Screen
+          s
           name="Home"
           component={HomeStackScreen}
           options={{
